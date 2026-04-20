@@ -1,7 +1,7 @@
 opencv-python==4.13.0.92
 mediapipe==0.10.32
 pyautogui==0.9.54
-numpy==2.4.3
+numpy==2.2.6
 websockets==16.0
 pycaw==20251023
 comtypes==1.4.16
