@@ -81,7 +81,8 @@ function broadcastToClients(msg) {
 
 // ── P2P FILE SHARING ──────────────────────────────────────────────────────────
 const discovery = new Discovery(DEVICE_NAME, PORT);
-discovery.start();
+// discovery.start() moved inside startServer callback to ensure correct PORT is shared
+
 
 app.get('/', (req, res) => {
   res.send(`
@@ -228,19 +229,34 @@ app.post('/relay-push/:targetIp/:targetPort', (req, res) => {
 });
 
 // ── START ─────────────────────────────────────────────────────────────────────
-server.listen(PORT, '0.0.0.0', () => {
-  const localIP = ip.getLocalIP();
-  console.log(chalk.cyan('\n========================================'));
-  console.log(chalk.green('  GESTRUA NET UNIFIED NODE ACTIVE'));
-  console.log(chalk.whiteBright(`  Device : ${DEVICE_NAME}`));
-  console.log(chalk.whiteBright('  URL    : http://localhost:5000'));
-  console.log(chalk.cyan('========================================\n'));
+const startServer = (portToTry) => {
+  server.listen(portToTry, '0.0.0.0', () => {
+    const localIP = ip.getLocalIP();
+    console.log(chalk.cyan('\n========================================'));
+    console.log(chalk.green('  GESTRUA NET UNIFIED NODE ACTIVE'));
+    console.log(chalk.whiteBright(`  Device : ${DEVICE_NAME}`));
+    console.log(chalk.whiteBright(`  URL    : http://localhost:${portToTry}`));
+    console.log(chalk.cyan('========================================\n'));
 
-  connectToEngine(); // <- Engine bridge is now active
+    // Update discovery with the actual bound port
+    discovery.port = portToTry;
+    discovery.start();
+    
+    connectToEngine();
+  }).on('error', (err) => {
+    if (err.code === 'EADDRINUSE' && portToTry < 5005) {
+      console.warn(chalk.yellow(`[Server] Port ${portToTry} in use, trying ${portToTry + 1}...`));
+      startServer(portToTry + 1);
+    } else {
+      console.error(chalk.red(`[Server] Error: ${err.message}`));
+    }
+  });
+};
 
-  setInterval(() => {
-    const peers = discovery.getPeers();
-    if (peers.length > 0)
-      console.log(chalk.gray(`[Network] Peers: ${peers.map(p => `${p.name}(${p.ip})`).join(', ')}`));
-  }, 10000);
-});
+startServer(PORT);
+
+setInterval(() => {
+  const peers = discovery.getPeers();
+  if (peers.length > 0)
+    console.log(chalk.gray(`[Network] Peers: ${peers.map(p => `${p.name}(${p.ip})`).join(', ')}`));
+}, 10000);

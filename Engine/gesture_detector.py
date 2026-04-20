@@ -64,9 +64,10 @@ def detect_gesture(landmarks) -> dict:
     if st.is_dragging and index_middle_dist < DRAG_THRESHOLD and thumb_index_dist > DRAG_RELEASE_THRESHOLD:
         return {"gesture": "drop", "point": index_tip}
 
-    # RIGHT CLICK: middle + thumb pinch (12 & 4) — only if index is NOT close
-    thumb_middle_dist = distance(thumb_tip, middle_tip)
-    if thumb_middle_dist < 0.08 and thumb_index_dist > 0.10:
+    # RIGHT CLICK: middle finger curled down (closer to wrist)
+    wrist = get_landmark(landmarks, 0)
+    mid_palm_dist = distance(middle_tip, wrist)
+    if mid_palm_dist < 0.12 and thumb_index_dist > 0.08:
         return {"gesture": "right_click", "point": index_tip}
 
     # LEFT CLICK: index + thumb pinch (8 & 4) — only if middle is NOT close
