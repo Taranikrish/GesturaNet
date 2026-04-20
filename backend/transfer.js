@@ -6,8 +6,9 @@ const { Readable } = require('stream');
 const chalk = require('./colors');
 const Integrity = require('./integrity');
 const Progress = require('./progress');
+const os = require('os');
 
-const RECEIVED_DIR = path.join(process.cwd(), 'received_files');
+const RECEIVED_DIR = path.join(os.homedir(), 'Downloads');
 
 const Transfer = {
 
