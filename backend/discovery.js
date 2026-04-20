@@ -4,15 +4,15 @@ const chalk = require('./colors'); // Native secure color helper
 
 const DISCOVERY_PORT = 41234;
 const BROADCAST_ADDR = '255.255.255.255';
-const HEARTBEAT_INTERVAL = 3000;
-const PEER_TTL = 10000;
+const HEARTBEAT_INTERVAL = 5000;
+const PEER_TTL = 30000;
 
 class Discovery {
   constructor(deviceName, serverPort) {
     this.name = deviceName;
     this.port = serverPort;
     this.ip = ip.getLocalIP(); // Uses native os module
-    this.peers = new Map(); // ip:port -> { name, ip, port, lastSeen }
+    this.peers = new Map(); // name -> { name, ip, port, lastSeen }
     
     this.socket = dgram.createSocket('udp4');
   }
@@ -22,10 +22,10 @@ class Discovery {
       try {
         const data = JSON.parse(msg.toString());
         if (data.type === 'ANNOUNCE' && (data.ip !== this.ip || data.port !== this.port)) {
-          const peerKey = `${data.ip}:${data.port}`;
+          const peerKey = data.name;
           this.peers.set(peerKey, {
             name: data.name,
-            ip: data.ip,
+            ip: rinfo.address, // Use the actual reachable source IP instead of the self-reported one
             port: data.port,
             lastSeen: Date.now()
           });
