@@ -28,12 +28,20 @@ class GestureState:
     available_cameras: list = field(default_factory=list)
     apply_denoise: bool = False    # Shader denoise toggle
     apply_sharpen: bool = False    # Shader sharpen toggle
+    screenshot_hotkey: str = "printscreen" # Hotkey string (e.g. "alt+\\")
 
 
 # Singleton state shared across all modules
 state = GestureState()
 
 CONFIG_FILE = os.path.join(os.path.dirname(__file__), "..", "user_settings.json")
+
+def set_config_suffix(suffix):
+    """Updates the config file path (e.g. user_settings_8765.json) and reloads it."""
+    global CONFIG_FILE
+    CONFIG_FILE = os.path.join(os.path.dirname(__file__), "..", f"user_settings_{suffix}.json")
+    print(f"[State] Config path updated to: {CONFIG_FILE}")
+    load_user_config()
 
 def load_user_config():
     if os.path.exists(CONFIG_FILE):
@@ -45,6 +53,7 @@ def load_user_config():
                 if 'camera_index' in data: state.camera_index = data['camera_index']
                 if 'apply_denoise' in data: state.apply_denoise = data['apply_denoise']
                 if 'apply_sharpen' in data: state.apply_sharpen = data['apply_sharpen']
+                if 'screenshot_hotkey' in data: state.screenshot_hotkey = data['screenshot_hotkey']
                 print(f"[State] Loaded user settings: {data}")
         except Exception as e:
             print(f"[State] Error loading config: {e}")
@@ -55,7 +64,8 @@ def save_user_config():
         'sensitivity': state.sensitivity,
         'camera_index': state.camera_index,
         'apply_denoise': state.apply_denoise,
-        'apply_sharpen': state.apply_sharpen
+        'apply_sharpen': state.apply_sharpen,
+        'screenshot_hotkey': state.screenshot_hotkey
     }
     try:
         with open(CONFIG_FILE, 'w') as f:

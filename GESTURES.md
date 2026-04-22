@@ -10,8 +10,8 @@ Hold up your left hand facing the camera to switch between control modes.
 | Left Hand Gesture | Resulting Mode | Description |
 | :--- | :--- | :--- |
 | **0 or 1 Finger Extended** | **Mode 1: Cursor Control** | Default safe mode. Used for standard mouse operations (move, click, scroll, drag). |
-| **2 Fingers Extended** | **Mode 2: System & P2P** | Used for adjusting system volume/brightness and sharing files over the LAN. |
-| **3+ Fingers Extended** | *(No change)* | Maintains whatever the current mode is. |
+| **2 Fingers Extended** | **Mode 2: System Control** | Used for adjusting system volume and screen brightness. |
+| **3 Fingers Extended** | **Mode 3: File Transfer** | Used for the "Grab and Drop" cross-device file sharing system. |
 
 *(Note: "Fingers" refers to Index, Middle, Ring, and Pinky. The thumb is ignored for counting).*
 
@@ -31,7 +31,9 @@ Hold up your left hand facing the camera to switch between control modes.
 
 ---
 
-## Mode 2: System Controls & File Sharing (Right Hand)
+---
+
+## Mode 2: System Controls (Right Hand)
 *Requires Left Hand to show 2 fingers, or be hidden after selecting Mode 2.*
 
 ### System Sliders (Pinch & Slide)
@@ -42,14 +44,18 @@ These gestures act like invisible vertical sliders. Pinch to grab the slider, mo
 | **Index + Thumb Pinch** | Volume Control | Pinch **Index** and **Thumb**. Move hand up/down to adjust system volume. |
 | **Middle + Thumb Pinch** | Brightness Control | Pinch **Middle** and **Thumb**. Move hand up/down to adjust screen brightness. |
 
-### P2P File Sharing
-To send a file, you must first select/highlight a file in Windows (e.g., click on a file in File Explorer so it is highlighted).
+---
+
+## Mode 3: File Transfer Mode (Right Hand)
+*Requires Left Hand to show 3 fingers, or be automatically triggered during transfer.*
+
+### P2P Grab & Drop
+To send a file, select it in Windows. In Mode 3, close your fist to "Grab". On the receiving machine (also forced into Mode 3), open your fist into a palm to "Drop" and accept.
 
 | Right Hand Gesture | Action | Execution Details |
 | :--- | :--- | :--- |
-| **Closed Fist** (Hold 2s) | Send File | Curl all fingers into a tight fist and **hold for 2 seconds**. GesturaNet will copy the currently selected file and dispatch it to all peers on the LAN. |
-| **Open Palm** (Hold 2s) | Accept Incoming File | When another device sends a file to you, open your hand completely flat facing the camera and **hold for 2 seconds** to accept the download. |
-| **Right Click Gesture** | Reject Incoming File | Perform the standard right-click gesture (**Thumb + Middle Pinch**) to instantly reject an incoming file request. |
+| **Closed Fist** (Hold 2s) | Grab & Dispatch | Hold a tight fist for 2s. Grabs selected file (or takes a screenshot if none) and broadcasts to network. |
+| **Fist to Open Palm** | Drop & Accept | Transition from a closed fist to an open palm to instantly "catch" and download an incoming file. |
 
 ---
 

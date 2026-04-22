@@ -40,6 +40,10 @@ CAMERA_FPS = 30
 
 ACTIVE_ZONE_MARGIN = 0.8      # normalized margin to remap active zone to full screen
 
+# File Transfer Settings
+FIST_HOLD_SECONDS = 2.0
+SCREENSHOT_HOTKEY = ['printscreen'] # List of keys to press (e.g. ['win', 'shift', 's'])
+
 MODEL_PATH = "hand_landmarker.task"
 MODEL_URL = (
     "https://storage.googleapis.com/mediapipe-models/"

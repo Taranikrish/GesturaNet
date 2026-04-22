@@ -87,6 +87,16 @@ const Handshake = {
     }
   },
 
+  acceptAnyPending: () => {
+    let acceptedCount = 0;
+    for (const [requestId, resolve] of pendingRequests.entries()) {
+      resolve(true);
+      pendingRequests.delete(requestId);
+      acceptedCount++;
+    }
+    return acceptedCount;
+  },
+
   sendHandshake: async (receiverPeer, fileMetadata) => {
     try {
       const url = `http://${receiverPeer.ip}:${receiverPeer.port}/receive-request`;

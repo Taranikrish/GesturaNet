@@ -13,6 +13,8 @@ export default function useGestureSocket(url) {
   });
   const [log, setLog] = useState([]);
   const [fileRequest, setFileRequest] = useState(null);
+  const [toast, setToast] = useState(null);
+  const [grabProgress, setGrabProgress] = useState(0);
   const wsRef = useRef(null);
   const prevGestureRef = useRef("none");
 
@@ -74,6 +76,11 @@ export default function useGestureSocket(url) {
           } else if (message.type === "file_receive_request") {
             setFileRequest(message);
             addLog(`Incoming file request: ${message.fileName}`, "info");
+          } else if (message.type === "info_toast") {
+            setToast({ message: message.message, id: Date.now() });
+            addLog(`[SYSTEM] ${message.message}`, "info");
+          } else if (message.type === "grab_progress") {
+            setGrabProgress(message.percent);
           }
         } catch (error) {
           addLog(`WS message parse error: ${error.message}`, "error");
@@ -106,5 +113,5 @@ export default function useGestureSocket(url) {
     };
   }, [url, addLog]);
 
-  return { state, log, sendCommand, fileRequest, setFileRequest };
+  return { state, log, sendCommand, fileRequest, setFileRequest, toast, setToast, grabProgress };
 }

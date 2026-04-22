@@ -68,7 +68,7 @@ export default function SurgicalDashboard({ state, log, sendCommand }) {
         {/* TopAppBar */}
         <header className="h-16 border-b border-surface-variant/10 bg-surface-container-lowest/80 backdrop-blur-xl flex items-center justify-between px-6 shrink-0 relative z-30">
           <div className="flex items-center gap-8">
-            <h1 className="font-headline font-semibold text-on-surface text-xl tracking-tight">Surgical Interface</h1>
+            <h1 className="font-headline font-semibold text-on-surface text-xl tracking-tight">Gesture Interface</h1>
             <div className="flex items-center gap-6">
               <span onClick={() => setActiveTab('Overview')} className={`font-label text-xs font-medium uppercase tracking-widest h-16 flex items-center border-b-2 cursor-pointer transition-all ${activeTab === 'Overview' ? 'text-primary border-primary' : 'text-on-surface/60 border-transparent hover:text-primary'}`}>Overview</span>
               <span onClick={() => setActiveTab('Controls')} className={`font-label text-xs font-medium uppercase tracking-widest h-16 flex items-center border-b-2 cursor-pointer transition-all ${activeTab === 'Controls' ? 'text-primary border-primary' : 'text-on-surface/60 border-transparent hover:text-primary'}`}>Settings</span>
@@ -76,7 +76,7 @@ export default function SurgicalDashboard({ state, log, sendCommand }) {
             </div>
           </div>
           <div className="flex items-center gap-6">
-             {/* status indicators... */}
+            {/* status indicators... */}
           </div>
         </header>
 
@@ -85,13 +85,13 @@ export default function SurgicalDashboard({ state, log, sendCommand }) {
           <section className="w-[320px] bg-surface-dim p-6 flex flex-col gap-6 overflow-y-auto border-r border-surface-variant/10">
             <div className={`p-4 rounded-xl border flex flex-col items-center justify-center gap-3 transition-all duration-500 ${state.active ? 'bg-surface-container-high border-primary/30 shadow-[0_0_15px_rgba(var(--color-primary),0.1)]' : 'bg-surface-container-low border-outline-variant/20'}`}>
               <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 ${state.active ? 'border-primary/50 animate-pulse' : 'border-outline-variant/50 opacity-40 grayscale'}`}>
-                <img 
+                <img
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuBoHI6JIdbqGKSmLVBaNJZxWdFWEMLvQKbqrxMc5PYYhIwxcnz9x7ETGzauvX3pe-uELL47UXZHg6o70jzg5cZrMIF4lZnf8PvPwfn9KR00-M3QEbVFHseA-5hsbvx2rLJ1IAf99XtgwVD96Mi1ruZziejqytl7D6aTW1xUrNo2DceGo0t-cGh9hGl1ORYkFEMZft4nI6XGv4PT2UvR0JJ9a8UC6hCjqEJDJ4xAoUuTRCEMt5efreMamIPnBJRzmLspaB7J-8tuEYYx"
                   className="w-6 h-6 object-contain mix-blend-screen"
                 />
               </div>
               <p className={`font-headline text-[10px] font-bold tracking-widest text-center ${state.active ? 'text-primary' : 'text-on-surface-variant/50'}`}>
-                {state.current_mode === 2 ? 'SYSTEM CONTROL MODE' : state.active ? 'CURSOR CONTROL MODE' : 'SYSTEM STANDBY'}
+                {state.current_mode === 3 ? 'FILE TRANSFER MODE' : state.current_mode === 2 ? 'SYSTEM CONTROL MODE' : state.active ? 'CURSOR CONTROL MODE' : 'SYSTEM STANDBY'}
               </p>
             </div>
             <div className="space-y-4">
@@ -131,24 +131,24 @@ export default function SurgicalDashboard({ state, log, sendCommand }) {
           <section className="flex-1 bg-surface-container-lowest relative overflow-hidden flex flex-col">
             {activeTab === 'Overview' ? (
               <div className="flex-1 p-6 flex items-center justify-center relative overflow-hidden">
-                  <div className="w-full h-full rounded-xl bg-surface-dim border border-outline-variant/10 depth-grid relative flex items-center justify-center group overflow-hidden">
-                    {!state.show_camera && (
-                      <div className="relative z-10 text-center transition-all duration-500">
-                        <div className={`w-64 h-64 border-[0.3px] ${state.active ? 'border-tertiary/40' : 'border-outline/20'} rounded-full flex items-center justify-center transition-all duration-700 ${state.active ? 'animate-[pulse_4s_infinite]' : ''}`}>
-                          <div className={`w-48 h-48 border-[0.3px] ${state.active ? 'border-primary/50' : 'border-outline/10'} rounded-full flex items-center justify-center`}>
-                            <div className={`w-36 h-36 flex items-center justify-center transition-all duration-1000 ${state.active ? 'scale-110' : 'scale-90 opacity-20 grayscale'}`}>
-                              <img 
-                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBoHI6JIdbqGKSmLVBaNJZxWdFWEMLvQKbqrxMc5PYYhIwxcnz9x7ETGzauvX3pe-uELL47UXZHg6o70jzg5cZrMIF4lZnf8PvPwfn9KR00-M3QEbVFHseA-5hsbvx2rLJ1IAf99XtgwVD96Mi1ruZziejqytl7D6aTW1xUrNo2DceGo0t-cGh9hGl1ORYkFEMZft4nI6XGv4PT2UvR0JJ9a8UC6hCjqEJDJ4xAoUuTRCEMt5efreMamIPnBJRzmLspaB7J-8tuEYYx"
-                                className="w-full h-full object-contain mix-blend-screen"
-                              />
-                            </div>
+                <div className="w-full h-full rounded-xl bg-surface-dim border border-outline-variant/10 depth-grid relative flex items-center justify-center group overflow-hidden">
+                  {!state.show_camera && (
+                    <div className="relative z-10 text-center transition-all duration-500">
+                      <div className={`w-64 h-64 border-[0.3px] ${state.active ? 'border-tertiary/40' : 'border-outline/20'} rounded-full flex items-center justify-center transition-all duration-700 ${state.active ? 'animate-[pulse_4s_infinite]' : ''}`}>
+                        <div className={`w-48 h-48 border-[0.3px] ${state.active ? 'border-primary/50' : 'border-outline/10'} rounded-full flex items-center justify-center`}>
+                          <div className={`w-36 h-36 flex items-center justify-center transition-all duration-1000 ${state.active ? 'scale-110' : 'scale-90 opacity-20 grayscale'}`}>
+                            <img
+                              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBoHI6JIdbqGKSmLVBaNJZxWdFWEMLvQKbqrxMc5PYYhIwxcnz9x7ETGzauvX3pe-uELL47UXZHg6o70jzg5cZrMIF4lZnf8PvPwfn9KR00-M3QEbVFHseA-5hsbvx2rLJ1IAf99XtgwVD96Mi1ruZziejqytl7D6aTW1xUrNo2DceGo0t-cGh9hGl1ORYkFEMZft4nI6XGv4PT2UvR0JJ9a8UC6hCjqEJDJ4xAoUuTRCEMt5efreMamIPnBJRzmLspaB7J-8tuEYYx"
+                              className="w-full h-full object-contain mix-blend-screen"
+                            />
                           </div>
                         </div>
                       </div>
-                    )}
-                    {state.show_camera && state.frame && (
-                      <img src={`data:image/jpeg;base64,${state.frame}`} className="absolute inset-0 w-full h-full object-cover z-0" />
-                    )}
+                    </div>
+                  )}
+                  {state.show_camera && state.frame && (
+                    <img src={`data:image/jpeg;base64,${state.frame}`} className="absolute inset-0 w-full h-full object-cover z-0" />
+                  )}
                 </div>
               </div>
             ) : activeTab === 'Controls' ? (
@@ -159,7 +159,7 @@ export default function SurgicalDashboard({ state, log, sendCommand }) {
                       <h2 className="text-3xl font-headline font-bold text-on-surface tracking-tight uppercase">Controller Parameters</h2>
                       <p className="text-on-surface-variant mt-2 max-w-md">Fine-tune the gesture-to-cursor translation engine for your specific surgical simulation environment.</p>
                     </div>
-                    <button 
+                    <button
                       onClick={() => {
                         sendCommand({ action: "set_smoothing", value: 0.2 });
                         sendCommand({ action: "set_sensitivity", value: 0.20 });
@@ -188,8 +188,8 @@ export default function SurgicalDashboard({ state, log, sendCommand }) {
                           </p>
                         </div>
                         <div className="space-y-3">
-                          <input 
-                            type="range" min="0.01" max="0.5" step="0.01" 
+                          <input
+                            type="range" min="0.01" max="0.5" step="0.01"
                             value={state.smoothing || 0.12}
                             onChange={(e) => sendCommand({ action: "set_smoothing", value: parseFloat(e.target.value) })}
                             className="w-full h-1.5 bg-surface-container-highest rounded-full appearance-none cursor-pointer accent-primary hover:accent-primary/80 transition-all"
@@ -215,8 +215,8 @@ export default function SurgicalDashboard({ state, log, sendCommand }) {
                           </p>
                         </div>
                         <div className="space-y-3">
-                          <input 
-                            type="range" min="0.05" max="0.4" step="0.01" 
+                          <input
+                            type="range" min="0.05" max="0.4" step="0.01"
                             value={state.sensitivity || 0.2}
                             onChange={(e) => sendCommand({ action: "set_sensitivity", value: parseFloat(e.target.value) })}
                             className="w-full h-1.5 bg-surface-container-highest rounded-full appearance-none cursor-pointer accent-tertiary hover:accent-tertiary/80 transition-all"
@@ -285,9 +285,36 @@ export default function SurgicalDashboard({ state, log, sendCommand }) {
                           </p>
                         </div>
                         <div className="pt-4">
-                           <div className={`w-12 h-6 rounded-full transition-colors duration-300 relative ${state.apply_denoise ? 'bg-yellow-500' : 'bg-surface-container-highest'}`}>
-                             <div className={`absolute top-1 bottom-1 w-4 rounded-full bg-white transition-all duration-300 ${state.apply_denoise ? 'left-7' : 'left-1'}`}></div>
-                           </div>
+                          <div className={`w-12 h-6 rounded-full transition-colors duration-300 relative ${state.apply_denoise ? 'bg-yellow-500' : 'bg-surface-container-highest'}`}>
+                            <div className={`absolute top-1 bottom-1 w-4 rounded-full bg-white transition-all duration-300 ${state.apply_denoise ? 'left-7' : 'left-1'}`}></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="group relative bg-surface-container-low p-10 rounded-2xl border border-outline-variant/10 hover:border-primary/30 transition-all duration-500 shadow-xl overflow-hidden">
+                      <div className="absolute top-0 right-0 p-8 text-right">
+                        <span className="block text-[8px] font-mono text-primary uppercase tracking-[0.3em] opacity-60">System Trigger</span>
+                        <span className="text-2xl font-mono font-bold text-primary tracking-tighter">
+                          {state.screenshot_hotkey || "printscreen"}
+                        </span>
+                      </div>
+                      <div className="relative z-10 space-y-6">
+                        <div className="max-w-xs">
+                          <h4 className="font-headline font-bold text-on-surface text-lg tracking-wide uppercase">Screenshot Hotkey</h4>
+                          <p className="text-xs text-on-surface-variant mt-2 leading-relaxed">
+                            Define the key combination for your screenshot app. Example: <code className="bg-surface-variant px-1">alt+\</code> or <code className="bg-surface-variant px-1">win+shift+s</code>.
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            placeholder="e.g. alt+\"
+                            defaultValue={state.screenshot_hotkey || "printscreen"}
+                            onBlur={(e) => sendCommand({ action: "set_screenshot_hotkey", value: e.target.value.toLowerCase() })}
+                            onKeyDown={(e) => { if(e.key === 'Enter') sendCommand({ action: "set_screenshot_hotkey", value: e.currentTarget.value.toLowerCase() }) }}
+                            className="flex-1 bg-surface-container-highest text-on-surface text-sm px-4 py-3 rounded-lg border border-outline-variant/20 focus:outline-none focus:border-primary/50 transition-all font-mono"
+                          />
                         </div>
                       </div>
                     </div>
@@ -309,9 +336,9 @@ export default function SurgicalDashboard({ state, log, sendCommand }) {
                           </p>
                         </div>
                         <div className="pt-4">
-                           <div className={`w-12 h-6 rounded-full transition-colors duration-300 relative ${state.apply_sharpen ? 'bg-cyan-500' : 'bg-surface-container-highest'}`}>
-                             <div className={`absolute top-1 bottom-1 w-4 rounded-full bg-white transition-all duration-300 ${state.apply_sharpen ? 'left-7' : 'left-1'}`}></div>
-                           </div>
+                          <div className={`w-12 h-6 rounded-full transition-colors duration-300 relative ${state.apply_sharpen ? 'bg-cyan-500' : 'bg-surface-container-highest'}`}>
+                            <div className={`absolute top-1 bottom-1 w-4 rounded-full bg-white transition-all duration-300 ${state.apply_sharpen ? 'left-7' : 'left-1'}`}></div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -328,17 +355,17 @@ export default function SurgicalDashboard({ state, log, sendCommand }) {
 
             {activeTab === 'Overview' && (
               <div className="absolute bottom-8 right-8 p-4 bg-surface-container-high/40 backdrop-blur-2xl border border-outline-variant/10 rounded-lg flex gap-4 shadow-2xl z-20">
-                <button 
+                <button
                   onClick={() => sendCommand(state.active ? "disable" : "enable")}
                   className={`px-4 py-2 rounded-sm font-headline font-bold text-[10px] tracking-widest ${state.active ? 'bg-error text-on-error' : 'bg-primary text-on-primary'}`}
                 >
                   {state.active ? "DEACTIVATE" : "ACTIVATE"}
                 </button>
-                <button 
+                <button
                   onClick={() => sendCommand(state.show_camera ? "camera_off" : "camera_on")}
                   className={`px-4 py-2 rounded-sm font-headline font-bold text-[10px] tracking-widest ${state.show_camera ? 'bg-tertiary text-on-tertiary' : 'bg-surface-container-highest text-on-surface-variant border border-outline-variant/20'}`}
                 >
-                   {state.show_camera ? "CAMERA_OFF" : "CAMERA_ON"}
+                  {state.show_camera ? "CAMERA_OFF" : "CAMERA_ON"}
                 </button>
               </div>
             )}

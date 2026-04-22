@@ -94,7 +94,7 @@ wss.on("connection", (ws) => {
       } else if (cmd.action === "camera_on" || cmd.action === "camera_off") {
         sendToEngine({ action: cmd.action });
         broadcastToClients({ type: "control", show_camera: cmd.action === "camera_on" });
-      } else if (["set_smoothing", "set_sensitivity", "set_camera", "set_denoise", "set_sharpen"].includes(cmd.action)) {
+      } else if (["set_smoothing", "set_sensitivity", "set_camera", "set_denoise", "set_sharpen", "force_mode"].includes(cmd.action)) {
         sendToEngine(cmd);
       }
     } catch (e) {

@@ -26,6 +26,7 @@ from websocket_server import broadcast
 from gesture_modes.mode_selector import update_mode_from_left_hand
 from gesture_modes.set1_cursor import process_set1
 from gesture_modes.set2_system import process_set2
+from gesture_modes.set3_transfer import process_set3
 
 # ── Volume & Brightness Integration ─────────────────────────────────────────
 AUDIO_VOLUME = None
@@ -211,11 +212,11 @@ def run_capture(loop: asyncio.AbstractEventLoop) -> None:
                 # ── Right Hand: Action Executor ──────────────────────────────
                 if right_hand:
                     if st.state.current_mode == 1:
-                        # Set 1 (Cursor mode) uses normalized landmarks internally
                         gesture_info["gesture"] = process_set1(right_hand)
                     elif st.state.current_mode == 2:
-                        # Set 2 (System mode) — Pinch & Slide
                         gesture_info["gesture"] = process_set2(right_hand, frame, AUDIO_VOLUME)
+                    elif st.state.current_mode == 3:
+                        gesture_info["gesture"] = process_set3(right_hand, frame)
                 else:
                     gesture_info["gesture"] = "none" # Right hand missing
                 st.state.gesture = gesture_info.get("gesture", "none")

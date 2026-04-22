@@ -14,7 +14,7 @@ class Discovery {
     this.ip = ip.getLocalIP(); // Uses native os module
     this.peers = new Map(); // name -> { name, ip, port, lastSeen }
     
-    this.socket = dgram.createSocket('udp4');
+    this.socket = dgram.createSocket({ type: 'udp4', reuseAddr: true });
   }
 
   start() {
@@ -22,10 +22,10 @@ class Discovery {
       try {
         const data = JSON.parse(msg.toString());
         if (data.type === 'ANNOUNCE' && (data.ip !== this.ip || data.port !== this.port)) {
-          const peerKey = data.name;
+          const peerKey = `${data.name}:${data.port}`;
           this.peers.set(peerKey, {
             name: data.name,
-            ip: rinfo.address, // Use the actual reachable source IP instead of the self-reported one
+            ip: rinfo.address, 
             port: data.port,
             lastSeen: Date.now()
           });

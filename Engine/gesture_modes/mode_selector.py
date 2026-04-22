@@ -51,5 +51,7 @@ def update_mode_from_left_hand(left_landmarks, current_mode: int) -> int:
         return 1
     elif fingers == 2:
         return 2
+    elif fingers >= 3:
+        return 3
         
     return current_mode
