@@ -83,6 +83,17 @@ export default function SurgicalDashboard({ state, log, sendCommand }) {
         <main className="flex-1 flex flex-row overflow-hidden">
           {/* Analysis View */}
           <section className="w-[320px] bg-surface-dim p-6 flex flex-col gap-6 overflow-y-auto border-r border-surface-variant/10">
+            <div className={`p-4 rounded-xl border flex flex-col items-center justify-center gap-3 transition-all duration-500 ${state.active ? 'bg-surface-container-high border-primary/30 shadow-[0_0_15px_rgba(var(--color-primary),0.1)]' : 'bg-surface-container-low border-outline-variant/20'}`}>
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 ${state.active ? 'border-primary/50 animate-pulse' : 'border-outline-variant/50 opacity-40 grayscale'}`}>
+                <img 
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBoHI6JIdbqGKSmLVBaNJZxWdFWEMLvQKbqrxMc5PYYhIwxcnz9x7ETGzauvX3pe-uELL47UXZHg6o70jzg5cZrMIF4lZnf8PvPwfn9KR00-M3QEbVFHseA-5hsbvx2rLJ1IAf99XtgwVD96Mi1ruZziejqytl7D6aTW1xUrNo2DceGo0t-cGh9hGl1ORYkFEMZft4nI6XGv4PT2UvR0JJ9a8UC6hCjqEJDJ4xAoUuTRCEMt5efreMamIPnBJRzmLspaB7J-8tuEYYx"
+                  className="w-6 h-6 object-contain mix-blend-screen"
+                />
+              </div>
+              <p className={`font-headline text-[10px] font-bold tracking-widest text-center ${state.active ? 'text-primary' : 'text-on-surface-variant/50'}`}>
+                {state.current_mode === 2 ? 'SYSTEM CONTROL MODE' : state.active ? 'CURSOR CONTROL MODE' : 'SYSTEM STANDBY'}
+              </p>
+            </div>
             <div className="space-y-4">
               <h3 className="font-headline text-xs font-semibold uppercase tracking-widest text-on-surface-variant flex items-center gap-2">
                 <span className={`w-1.5 h-1.5 rounded-full ${state.engineConnected ? 'bg-tertiary animate-pulse' : 'bg-error'}`}></span>
@@ -120,27 +131,24 @@ export default function SurgicalDashboard({ state, log, sendCommand }) {
           <section className="flex-1 bg-surface-container-lowest relative overflow-hidden flex flex-col">
             {activeTab === 'Overview' ? (
               <div className="flex-1 p-6 flex items-center justify-center relative overflow-hidden">
-                 <div className="w-full h-full rounded-xl bg-surface-dim border border-outline-variant/10 depth-grid relative flex items-center justify-center group overflow-hidden">
-                   <div className={`relative z-10 text-center transition-all duration-500 ${state.show_camera ? 'bg-surface-dim/40 backdrop-blur-md p-6 rounded-xl border border-outline-variant/20' : ''}`}>
-                    <div className={`w-64 h-64 border-[0.3px] ${state.active ? 'border-tertiary/40' : 'border-outline/20'} rounded-full flex items-center justify-center transition-all duration-700 ${state.active ? 'animate-[pulse_4s_infinite]' : ''}`}>
-                      <div className={`w-48 h-48 border-[0.3px] ${state.active ? 'border-primary/50' : 'border-outline/10'} rounded-full flex items-center justify-center`}>
-                        <div className={`w-36 h-36 flex items-center justify-center transition-all duration-1000 ${state.active ? 'scale-110' : 'scale-90 opacity-20 grayscale'}`}>
-                          <img 
-                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBoHI6JIdbqGKSmLVBaNJZxWdFWEMLvQKbqrxMc5PYYhIwxcnz9x7ETGzauvX3pe-uELL47UXZHg6o70jzg5cZrMIF4lZnf8PvPwfn9KR00-M3QEbVFHseA-5hsbvx2rLJ1IAf99XtgwVD96Mi1ruZziejqytl7D6aTW1xUrNo2DceGo0t-cGh9hGl1ORYkFEMZft4nI6XGv4PT2UvR0JJ9a8UC6hCjqEJDJ4xAoUuTRCEMt5efreMamIPnBJRzmLspaB7J-8tuEYYx"
-                            className="w-full h-full object-contain mix-blend-screen"
-                          />
+                  <div className="w-full h-full rounded-xl bg-surface-dim border border-outline-variant/10 depth-grid relative flex items-center justify-center group overflow-hidden">
+                    {!state.show_camera && (
+                      <div className="relative z-10 text-center transition-all duration-500">
+                        <div className={`w-64 h-64 border-[0.3px] ${state.active ? 'border-tertiary/40' : 'border-outline/20'} rounded-full flex items-center justify-center transition-all duration-700 ${state.active ? 'animate-[pulse_4s_infinite]' : ''}`}>
+                          <div className={`w-48 h-48 border-[0.3px] ${state.active ? 'border-primary/50' : 'border-outline/10'} rounded-full flex items-center justify-center`}>
+                            <div className={`w-36 h-36 flex items-center justify-center transition-all duration-1000 ${state.active ? 'scale-110' : 'scale-90 opacity-20 grayscale'}`}>
+                              <img 
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBoHI6JIdbqGKSmLVBaNJZxWdFWEMLvQKbqrxMc5PYYhIwxcnz9x7ETGzauvX3pe-uELL47UXZHg6o70jzg5cZrMIF4lZnf8PvPwfn9KR00-M3QEbVFHseA-5hsbvx2rLJ1IAf99XtgwVD96Mi1ruZziejqytl7D6aTW1xUrNo2DceGo0t-cGh9hGl1ORYkFEMZft4nI6XGv4PT2UvR0JJ9a8UC6hCjqEJDJ4xAoUuTRCEMt5efreMamIPnBJRzmLspaB7J-8tuEYYx"
+                                className="w-full h-full object-contain mix-blend-screen"
+                              />
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="mt-8">
-                       <p className={`font-headline text-lg font-bold tracking-tighter ${state.active ? 'text-on-surface' : 'text-on-surface-variant/40'}`}>
-                         {state.current_mode === 2 ? 'SYSTEM CONTROL MODE' : state.active ? 'CURSOR CONTROL MODE' : 'SYSTEM STANDBY'}
-                       </p>
-                    </div>
-                  </div>
-                  {state.show_camera && state.frame && (
-                    <img src={`data:image/jpeg;base64,${state.frame}`} className="absolute inset-0 w-full h-full object-cover opacity-60 z-0" />
-                  )}
+                    )}
+                    {state.show_camera && state.frame && (
+                      <img src={`data:image/jpeg;base64,${state.frame}`} className="absolute inset-0 w-full h-full object-cover z-0" />
+                    )}
                 </div>
               </div>
             ) : activeTab === 'Controls' ? (
@@ -256,6 +264,54 @@ export default function SurgicalDashboard({ state, log, sendCommand }) {
                           <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant/50">
                             arrow_drop_down
                           </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className={`group relative p-10 rounded-2xl border transition-all duration-500 shadow-xl overflow-hidden cursor-pointer ${state.apply_denoise ? 'bg-yellow-500/10 border-yellow-500/30' : 'bg-surface-container-low border-outline-variant/10 hover:border-yellow-500/30'}`} onClick={() => sendCommand({ action: "set_denoise", value: !state.apply_denoise })}>
+                      <div className="absolute top-0 right-0 p-8">
+                        <div className="text-right">
+                          <span className={`block text-[8px] font-mono uppercase tracking-[0.3em] opacity-60 ${state.apply_denoise ? 'text-yellow-500' : 'text-on-surface-variant'}`}>Filter Status</span>
+                          <span className={`text-2xl font-mono font-bold tracking-tighter ${state.apply_denoise ? 'text-yellow-500' : 'text-on-surface-variant/50'}`}>
+                            {state.apply_denoise ? 'ACTIVE' : 'DISABLED'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="relative z-10 space-y-6">
+                        <div className="max-w-xs">
+                          <h4 className="font-headline font-bold text-on-surface text-lg tracking-wide uppercase">Shader Denoise</h4>
+                          <p className="text-xs text-on-surface-variant mt-2 leading-relaxed">
+                            Applies a real-time bilateral filter to smooth out sensor noise while preserving sharp edges for MediaPipe.
+                          </p>
+                        </div>
+                        <div className="pt-4">
+                           <div className={`w-12 h-6 rounded-full transition-colors duration-300 relative ${state.apply_denoise ? 'bg-yellow-500' : 'bg-surface-container-highest'}`}>
+                             <div className={`absolute top-1 bottom-1 w-4 rounded-full bg-white transition-all duration-300 ${state.apply_denoise ? 'left-7' : 'left-1'}`}></div>
+                           </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className={`group relative p-10 rounded-2xl border transition-all duration-500 shadow-xl overflow-hidden cursor-pointer ${state.apply_sharpen ? 'bg-cyan-500/10 border-cyan-500/30' : 'bg-surface-container-low border-outline-variant/10 hover:border-cyan-500/30'}`} onClick={() => sendCommand({ action: "set_sharpen", value: !state.apply_sharpen })}>
+                      <div className="absolute top-0 right-0 p-8">
+                        <div className="text-right">
+                          <span className={`block text-[8px] font-mono uppercase tracking-[0.3em] opacity-60 ${state.apply_sharpen ? 'text-cyan-500' : 'text-on-surface-variant'}`}>Filter Status</span>
+                          <span className={`text-2xl font-mono font-bold tracking-tighter ${state.apply_sharpen ? 'text-cyan-500' : 'text-on-surface-variant/50'}`}>
+                            {state.apply_sharpen ? 'ACTIVE' : 'DISABLED'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="relative z-10 space-y-6">
+                        <div className="max-w-xs">
+                          <h4 className="font-headline font-bold text-on-surface text-lg tracking-wide uppercase">Shader Sharpen</h4>
+                          <p className="text-xs text-on-surface-variant mt-2 leading-relaxed">
+                            Applies a convolution kernel to enhance edge contrast and detail definition.
+                          </p>
+                        </div>
+                        <div className="pt-4">
+                           <div className={`w-12 h-6 rounded-full transition-colors duration-300 relative ${state.apply_sharpen ? 'bg-cyan-500' : 'bg-surface-container-highest'}`}>
+                             <div className={`absolute top-1 bottom-1 w-4 rounded-full bg-white transition-all duration-300 ${state.apply_sharpen ? 'left-7' : 'left-1'}`}></div>
+                           </div>
                         </div>
                       </div>
                     </div>

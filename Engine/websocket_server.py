@@ -44,13 +44,24 @@ async def ws_handler(websocket, path="/") -> None:
                     print("[Engine] Camera feed → OFF")
                 elif cmd.get("action") == "set_smoothing":
                     st.state.smoothing = float(cmd.get("value", 0.12))
+                    st.save_user_config()
                     print(f"[Engine] Smoothing → {st.state.smoothing}")
                 elif cmd.get("action") == "set_sensitivity":
                     st.state.sensitivity = float(cmd.get("value", 0.2))
+                    st.save_user_config()
                     print(f"[Engine] Sensitivity (Margin) → {st.state.sensitivity}")
                 elif cmd.get("action") == "set_camera":
                     st.state.camera_index = int(cmd.get("value", 0))
+                    st.save_user_config()
                     print(f"[Engine] Camera Index → {st.state.camera_index}")
+                elif cmd.get("action") == "set_denoise":
+                    st.state.apply_denoise = bool(cmd.get("value", False))
+                    st.save_user_config()
+                    print(f"[Engine] Shader Denoise → {st.state.apply_denoise}")
+                elif cmd.get("action") == "set_sharpen":
+                    st.state.apply_sharpen = bool(cmd.get("value", False))
+                    st.save_user_config()
+                    print(f"[Engine] Shader Sharpen → {st.state.apply_sharpen}")
             except json.JSONDecodeError:
                 pass
     finally:

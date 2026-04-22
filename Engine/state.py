@@ -1,4 +1,6 @@
 import time
+import json
+import os
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -24,10 +26,44 @@ class GestureState:
     current_mode: int = 1          # 1 = Cursor Set, 2 = System Set
     camera_index: int = CAMERA_INDEX # Current camera index
     available_cameras: list = field(default_factory=list)
+    apply_denoise: bool = False    # Shader denoise toggle
+    apply_sharpen: bool = False    # Shader sharpen toggle
 
 
 # Singleton state shared across all modules
 state = GestureState()
+
+CONFIG_FILE = os.path.join(os.path.dirname(__file__), "..", "user_settings.json")
+
+def load_user_config():
+    if os.path.exists(CONFIG_FILE):
+        try:
+            with open(CONFIG_FILE, 'r') as f:
+                data = json.load(f)
+                if 'smoothing' in data: state.smoothing = data['smoothing']
+                if 'sensitivity' in data: state.sensitivity = data['sensitivity']
+                if 'camera_index' in data: state.camera_index = data['camera_index']
+                if 'apply_denoise' in data: state.apply_denoise = data['apply_denoise']
+                if 'apply_sharpen' in data: state.apply_sharpen = data['apply_sharpen']
+                print(f"[State] Loaded user settings: {data}")
+        except Exception as e:
+            print(f"[State] Error loading config: {e}")
+
+def save_user_config():
+    data = {
+        'smoothing': state.smoothing,
+        'sensitivity': state.sensitivity,
+        'camera_index': state.camera_index,
+        'apply_denoise': state.apply_denoise,
+        'apply_sharpen': state.apply_sharpen
+    }
+    try:
+        with open(CONFIG_FILE, 'w') as f:
+            json.dump(data, f, indent=4)
+    except Exception as e:
+        print(f"[State] Error saving config: {e}")
+
+load_user_config()
 
 # WebSocket clients
 connected_clients: set = set()

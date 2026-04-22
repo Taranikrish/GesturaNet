@@ -137,7 +137,7 @@ def run_capture(loop: asyncio.AbstractEventLoop) -> None:
     WebSocket broadcasts from this synchronous context.
     """
     current_camera_index = st.state.camera_index
-    cap = cv2.VideoCapture(current_camera_index, cv2.CAP_DSHOW)
+    cap = cv2.VideoCapture(current_camera_index, cv2.CAP_MSMF)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH,  FRAME_WIDTH)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT)
     cap.set(cv2.CAP_PROP_FPS,          CAMERA_FPS)
@@ -155,7 +155,7 @@ def run_capture(loop: asyncio.AbstractEventLoop) -> None:
         if st.state.camera_index != current_camera_index:
             cap.release()
             current_camera_index = st.state.camera_index
-            cap = cv2.VideoCapture(current_camera_index, cv2.CAP_DSHOW)
+            cap = cv2.VideoCapture(current_camera_index, cv2.CAP_MSMF)
             cap.set(cv2.CAP_PROP_FRAME_WIDTH,  FRAME_WIDTH)
             cap.set(cv2.CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT)
             cap.set(cv2.CAP_PROP_FPS,          CAMERA_FPS)
@@ -177,6 +177,16 @@ def run_capture(loop: asyncio.AbstractEventLoop) -> None:
 
         frame = cv2.flip(frame, 1)
         frame = cv2.resize(frame, (FRAME_WIDTH, FRAME_HEIGHT))
+
+        # ── Shader Denoise (Bilateral Filter) ─────────────────────────────
+        # Smooths flat regions while preserving edges for cleaner MP detection
+        if getattr(st.state, "apply_denoise", False):
+            frame = cv2.bilateralFilter(frame, d=7, sigmaColor=75, sigmaSpace=75)
+
+        # ── Shader Sharpen ────────────────────────────────────────────────
+        if getattr(st.state, "apply_sharpen", False):
+            kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
+            frame = cv2.filter2D(frame, -1, kernel)
 
         # ── MediaPipe inference ───────────────────────────────────────────
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -226,6 +236,8 @@ def run_capture(loop: asyncio.AbstractEventLoop) -> None:
             "scroll_delta":    st.state.scroll_delta,
             "camera_index":    st.state.camera_index,
             "available_cameras": st.state.available_cameras,
+            "apply_denoise":   st.state.apply_denoise,
+            "apply_sharpen":   st.state.apply_sharpen,
             "timestamp":       time.time(),
         }
 

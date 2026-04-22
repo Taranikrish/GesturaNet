@@ -68,7 +68,7 @@ wss.on('connection', (ws) => {
       const cmd = JSON.parse(data.toString()); 
       if (cmd.action === 'handshake_response') {
         Handshake.resolveRequest(cmd.requestId, cmd.accepted);
-      } else if (['enable','disable','camera_on','camera_off','set_smoothing','set_sensitivity','set_camera'].includes(cmd.action)) {
+      } else if (['enable','disable','camera_on','camera_off','set_smoothing','set_sensitivity','set_camera', 'set_denoise', 'set_sharpen'].includes(cmd.action)) {
         sendToEngine(cmd); 
       }
     } catch (e) {} 
