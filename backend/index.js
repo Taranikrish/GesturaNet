@@ -16,7 +16,7 @@ const Busboy = require('busboy');
 const ip = require('./network_utils');
 const chalk = require('./colors');
 
-try { process.loadEnvFile(); } catch (e) { /* .env optional */ }
+try { process.loadEnvFile(path.resolve(__dirname, '../.env')); } catch (e) { /* .env optional */ }
 
 const Discovery = require('./discovery');
 const Handshake = require('./handshake');
@@ -26,7 +26,7 @@ const Resume = require('./resume');
 
 const app = express();
 const server = http.createServer(app);
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.BACKEND_PORT || process.env.PORT || 5000;
 const DEVICE_NAME = process.env.DEVICE_NAME || os.hostname();
 
 app.use(cors());
@@ -37,7 +37,9 @@ let engineSocket = null;
 let lastEngineState = { gesture: 'none', active: false, fps: 5, cursor_x: 0, cursor_y: 0, scroll_delta: 0, timestamp: 0 };
 
 function connectToEngine() {
-  const ENGINE_WS = process.env.ENGINE_WS || 'ws://localhost:8765';
+  const engineHost = process.env.ENGINE_HOST || 'localhost';
+  const enginePort = process.env.ENGINE_PORT || 8765;
+  const ENGINE_WS = process.env.ENGINE_WS || `ws://${engineHost}:${enginePort}`;
   console.log(chalk.yellow(`[Bridge] Connecting to Python engine at ${ENGINE_WS}...`));
   engineSocket = new WebSocket(ENGINE_WS);
   engineSocket.on('open', () => { console.log(chalk.green('[Bridge] Connected ✓')); broadcastToClients({ type: 'engine_connected' }); });

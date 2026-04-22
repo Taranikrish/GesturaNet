@@ -62,8 +62,9 @@ def _dispatch_native_file():
         file_path = files[0]
         print(f"[Set 2] Dispatching: {file_path}")
 
+        from config import BACKEND_HOST, BACKEND_PORT
         req = urllib.request.Request(
-            "http://localhost:5000/native-dispatch",
+            f"http://{BACKEND_HOST}:{BACKEND_PORT}/native-dispatch",
             data=json.dumps({"filePath": file_path}).encode("utf-8"),
             headers={"Content-Type": "application/json"}
         )

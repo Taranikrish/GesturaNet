@@ -3,7 +3,9 @@ import useGestureSocket from './hooks/useGestureSocket';
 import SurgicalDashboard from './pages/SurgicalDashboard';
 
 export default function App() {
-  const WS_URL = 'ws://localhost:5000/ws'; // Connect to dynamic host
+  const BACKEND_HOST = import.meta.env.BACKEND_HOST || 'localhost';
+  const BACKEND_PORT = import.meta.env.BACKEND_PORT || '5000';
+  const WS_URL = `ws://${BACKEND_HOST}:${BACKEND_PORT}/ws`; // Connect to dynamic host
   const { state, log, sendCommand, fileRequest, setFileRequest } = useGestureSocket(WS_URL);
   const [acceptProgress, setAcceptProgress] = useState(0);
 

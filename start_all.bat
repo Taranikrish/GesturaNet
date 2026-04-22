@@ -39,11 +39,25 @@ echo locked > "%LOCKFILE%"
 :: Once the lock is released (e.g. main window closes), it will kill the exact PIDs.
 start "" /B powershell -NoProfile -WindowStyle Hidden -Command "$lockPath='%LOCKFILE%'; $pids = '%PIDS_LIST%' -split ','; Start-Sleep -Seconds 3; while ($true) { Start-Sleep -Seconds 1; try { $stream = [System.IO.File]::Open($lockPath, 'Open', 'ReadWrite', 'None'); $stream.Close(); break } catch { continue } }; Remove-Item $lockPath -Force -ErrorAction SilentlyContinue; foreach ($p in $pids) { taskkill /F /T /PID $p 2>$null }"
 
+:: Read .env file for display
+set BACKEND_HOST=localhost
+set BACKEND_PORT=5000
+set FRONTEND_HOST=localhost
+set FRONTEND_PORT=5173
+if exist "%ROOT_DIR%.env" (
+    for /f "usebackq eol=# tokens=1,2 delims==" %%A in ("%ROOT_DIR%.env") do (
+        if "%%A"=="BACKEND_HOST" set BACKEND_HOST=%%B
+        if "%%A"=="BACKEND_PORT" set BACKEND_PORT=%%B
+        if "%%A"=="FRONTEND_HOST" set FRONTEND_HOST=%%B
+        if "%%A"=="FRONTEND_PORT" set FRONTEND_PORT=%%B
+    )
+)
+
 echo.
 echo ==========================================
 echo  Services are running:
-echo  - Backend:  http://localhost:5000
-echo  - Frontend: http://localhost:5173
+echo  - Backend:  http://!BACKEND_HOST!:!BACKEND_PORT!
+echo  - Frontend: http://!FRONTEND_HOST!:!FRONTEND_PORT!
 echo.
 echo  Press any key or close this window
 echo  to stop ALL services.

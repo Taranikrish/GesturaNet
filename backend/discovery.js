@@ -2,7 +2,7 @@ const dgram = require('dgram');
 const ip = require('./network_utils'); // Native secure IP helper
 const chalk = require('./colors'); // Native secure color helper
 
-const DISCOVERY_PORT = 41234;
+const DISCOVERY_PORT = process.env.DISCOVERY_PORT ? parseInt(process.env.DISCOVERY_PORT) : 41234;
 const BROADCAST_ADDR = '255.255.255.255';
 const HEARTBEAT_INTERVAL = 5000;
 const PEER_TTL = 30000;
