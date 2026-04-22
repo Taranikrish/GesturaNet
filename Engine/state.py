@@ -2,9 +2,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Optional
 
-from config import INACTIVE_FPS
-
-
+from config import INACTIVE_FPS, CAMERA_INDEX
 # ── Gesture State ─────────────────────────────────────────────────────────────
 @dataclass
 class GestureState:
@@ -24,6 +22,8 @@ class GestureState:
     smoothing: float = 0.12        # Cursor smoothing factor
     sensitivity: float = 0.2       # Active zone margin (inverted sensitivity)
     current_mode: int = 1          # 1 = Cursor Set, 2 = System Set
+    camera_index: int = CAMERA_INDEX # Current camera index
+    available_cameras: list = field(default_factory=list)
 
 
 # Singleton state shared across all modules

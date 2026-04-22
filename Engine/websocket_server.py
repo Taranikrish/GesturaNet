@@ -48,6 +48,9 @@ async def ws_handler(websocket, path="/") -> None:
                 elif cmd.get("action") == "set_sensitivity":
                     st.state.sensitivity = float(cmd.get("value", 0.2))
                     print(f"[Engine] Sensitivity (Margin) → {st.state.sensitivity}")
+                elif cmd.get("action") == "set_camera":
+                    st.state.camera_index = int(cmd.get("value", 0))
+                    print(f"[Engine] Camera Index → {st.state.camera_index}")
             except json.JSONDecodeError:
                 pass
     finally:

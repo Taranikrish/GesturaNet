@@ -136,20 +136,44 @@ def run_capture(loop: asyncio.AbstractEventLoop) -> None:
     Main OpenCV loop.  Runs in the main thread; uses *loop* to schedule
     WebSocket broadcasts from this synchronous context.
     """
-    cap = cv2.VideoCapture(CAMERA_INDEX, cv2.CAP_DSHOW)
+    current_camera_index = st.state.camera_index
+    cap = cv2.VideoCapture(current_camera_index, cv2.CAP_DSHOW)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH,  FRAME_WIDTH)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT)
     cap.set(cv2.CAP_PROP_FPS,          CAMERA_FPS)
-    print("[Engine] Camera started")
+    print(f"[Engine] Camera started at index {current_camera_index}")
 
-    while cap.isOpened():
+    try:
+        from pygrabber.dshow_graph import FilterGraph
+        st.state.available_cameras = FilterGraph().get_input_devices()
+        print(f"[Engine] Available cameras: {st.state.available_cameras}")
+    except ImportError:
+        print("[Engine] pygrabber not installed, cannot fetch camera names.")
+        st.state.available_cameras = []
+
+    while True:
+        if st.state.camera_index != current_camera_index:
+            cap.release()
+            current_camera_index = st.state.camera_index
+            cap = cv2.VideoCapture(current_camera_index, cv2.CAP_DSHOW)
+            cap.set(cv2.CAP_PROP_FRAME_WIDTH,  FRAME_WIDTH)
+            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT)
+            cap.set(cv2.CAP_PROP_FPS,          CAMERA_FPS)
+            print(f"[Engine] Camera switched to index {current_camera_index}")
+
+        if not cap.isOpened():
+            time.sleep(1)
+            continue
+
         target_fps  = st.state.fps
         frame_delay = 1.0 / target_fps
         start       = time.time()
 
         ret, frame = cap.read()
         if not ret:
-            break
+            print("[Engine] Failed to read frame")
+            time.sleep(1)
+            continue
 
         frame = cv2.flip(frame, 1)
         frame = cv2.resize(frame, (FRAME_WIDTH, FRAME_HEIGHT))
@@ -200,6 +224,8 @@ def run_capture(loop: asyncio.AbstractEventLoop) -> None:
             "cursor_x":        st.state.cursor_x,
             "cursor_y":        st.state.cursor_y,
             "scroll_delta":    st.state.scroll_delta,
+            "camera_index":    st.state.camera_index,
+            "available_cameras": st.state.available_cameras,
             "timestamp":       time.time(),
         }
 

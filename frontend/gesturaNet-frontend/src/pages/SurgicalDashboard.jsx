@@ -216,6 +216,49 @@ export default function SurgicalDashboard({ state, log, sendCommand }) {
                         </div>
                       </div>
                     </div>
+
+                    <div className="group relative bg-surface-container-low p-10 rounded-2xl border border-outline-variant/10 hover:border-error/30 transition-all duration-500 shadow-xl overflow-hidden">
+                      <div className="absolute top-0 right-0 p-8">
+                        <div className="text-right">
+                          <span className="block text-[8px] font-mono text-error uppercase tracking-[0.3em] opacity-60">Device Index</span>
+                          <span className="text-5xl font-mono font-bold text-error tabular-nums tracking-tighter">
+                            {state.camera_index || 0}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="relative z-10 space-y-6">
+                        <div className="max-w-xs">
+                          <h4 className="font-headline font-bold text-on-surface text-lg tracking-wide uppercase">Camera Input</h4>
+                          <p className="text-xs text-on-surface-variant mt-2 leading-relaxed">
+                            Selects the physical camera hardware interface. Changes take effect immediately.
+                          </p>
+                        </div>
+                        <div className="space-y-3 relative">
+                          <select
+                            value={state.camera_index || 0}
+                            onChange={(e) => sendCommand({ action: "set_camera", value: parseInt(e.target.value) })}
+                            className="w-full bg-surface-container-highest text-on-surface text-sm px-4 py-3 rounded-lg border border-outline-variant/20 focus:outline-none focus:border-error/50 transition-all cursor-pointer appearance-none pr-10"
+                          >
+                            {state.available_cameras && state.available_cameras.length > 0 ? (
+                              state.available_cameras.map((cam_name, idx) => (
+                                <option key={idx} value={idx} className="bg-surface-dim">
+                                  {cam_name}
+                                </option>
+                              ))
+                            ) : (
+                              [0, 1, 2, 3, 4].map((idx) => (
+                                <option key={idx} value={idx} className="bg-surface-dim">
+                                  Camera {idx}
+                                </option>
+                              ))
+                            )}
+                          </select>
+                          <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant/50">
+                            arrow_drop_down
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
