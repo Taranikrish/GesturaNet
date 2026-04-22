@@ -64,7 +64,7 @@ function connectToEngine() {
   });
   
   engineSocket.on('error', (err) => { 
-    console.error('[Bridge] Error:', err.message);
+    // Silence noise, the 'close' event handles retry logging
   });
 }
 
@@ -139,10 +139,18 @@ app.get('/progress/:transferId', (req, res) => {
 // ── NATIVE DISPATCH FROM PYTHON ────────────────────────────────────────────────
 app.post('/native-dispatch', (req, res) => {
   const { filePath } = req.body;
-  if (!filePath) return res.status(400).json({ error: 'Missing filePath' });
+  console.log(chalk.gray(`[NativeDispatch] Incoming request for: ${filePath || 'NULL'}`));
+
+  if (!filePath) {
+    console.error(chalk.red('[NativeDispatch] Error: Missing filePath in request body'));
+    return res.status(400).json({ error: 'Missing filePath' });
+  }
 
   const fs = require('fs');
-  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'File not found on disk' });
+  if (!fs.existsSync(filePath)) {
+    console.error(chalk.red(`[NativeDispatch] Error: File not found at ${filePath}`));
+    return res.status(404).json({ error: 'File not found on disk' });
+  }
 
   const stats = fs.statSync(filePath);
   if (!stats.isFile()) return res.status(400).json({ error: 'Not a file' });
@@ -294,6 +302,8 @@ startServer(PORT);
 
 setInterval(() => {
   const peers = discovery.getPeers();
-  if (peers.length > 0)
-    console.log(chalk.gray(`[Network] Peers: ${peers.map(p => `${p.name}(${p.ip})`).join(', ')}`));
-}, 10000);
+  broadcastToClients({ type: 'discovery_update', peers });
+  
+  // Continuous scanning feedback for the user
+  console.log(chalk.gray(`[Network] Scanning... (${peers.length} peers online)`));
+}, 3000);

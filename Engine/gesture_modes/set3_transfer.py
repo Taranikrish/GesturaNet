@@ -87,13 +87,15 @@ def _dispatch_native_file():
             filePath = temp_path
 
         # 5. Notify Backend
+        # Normalize path to use forward slashes for the JSON request
+        clean_path = filePath.replace("\\", "/")
         req = urllib.request.Request(
             f"http://{BACKEND_HOST}:{BACKEND_PORT}/native-dispatch",
-            data=json.dumps({"filePath": filePath}).encode("utf-8"),
+            data=json.dumps({"filePath": clean_path}).encode("utf-8"),
             headers={"Content-Type": "application/json"}
         )
         urllib.request.urlopen(req)
-        print(f"[Set 3] Dispatched: {filePath}")
+        print(f"[Set 3] Dispatched Successfully: {clean_path}")
 
     except Exception as e:
         print(f"[Set 3] Dispatch Error: {e}")
