@@ -2,9 +2,9 @@ const dgram = require('dgram');
 const ip = require('./network_utils'); // Native secure IP helper
 const chalk = require('./colors'); // Native secure color helper
 
-const DISCOVERY_PORT = 41234;
+const DISCOVERY_PORT = process.env.DISCOVERY_PORT ? parseInt(process.env.DISCOVERY_PORT) : 41234;
 const BROADCAST_ADDR = '255.255.255.255';
-const HEARTBEAT_INTERVAL = 5000;
+const HEARTBEAT_INTERVAL = 3000;
 const PEER_TTL = 30000;
 
 class Discovery {
@@ -14,18 +14,30 @@ class Discovery {
     this.ip = ip.getLocalIP(); // Uses native os module
     this.peers = new Map(); // name -> { name, ip, port, lastSeen }
     
-    this.socket = dgram.createSocket('udp4');
+    this.socket = dgram.createSocket({ type: 'udp4', reuseAddr: true });
   }
 
   start() {
     this.socket.on('message', (msg, rinfo) => {
       try {
         const data = JSON.parse(msg.toString());
-        if (data.type === 'ANNOUNCE' && (data.ip !== this.ip || data.port !== this.port)) {
-          const peerKey = data.name;
+        // A peer is "not me" if either the name is different OR the port is different
+        const isMe = (data.name === this.name && data.port === this.port);
+        
+        if (data.type === 'ANNOUNCE' && !isMe) {
+          const peerKey = `${data.name}:${data.port}`;
+          
+          if (!this.peers.has(peerKey)) {
+            console.log(chalk.green(`[Discovery] Found Peer: ${data.name} (${rinfo.address}:${data.port})`));
+          }
+
+          // Use the rinfo.address (actual source) as the reachable IP
+          // If it's from 127.0.0.1, we use the local IP to ensure other peers can still see it
+          const reachableIP = (rinfo.address === '127.0.0.1') ? this.ip : rinfo.address;
+
           this.peers.set(peerKey, {
             name: data.name,
-            ip: rinfo.address, // Use the actual reachable source IP instead of the self-reported one
+            ip: reachableIP, 
             port: data.port,
             lastSeen: Date.now()
           });
@@ -53,8 +65,12 @@ class Discovery {
       }
     });
 
-    // Try to bind normally. If blocked (EADDRINUSE), node will still send heartbeats.
-    this.socket.bind({ port: DISCOVERY_PORT, exclusive: false });
+    // Try to bind normally. 'exclusive: false' allows sharing on Windows.
+    this.socket.bind({
+      port: DISCOVERY_PORT,
+      address: '0.0.0.0',
+      exclusive: false
+    });
 
     // Start broadcasting heartbeat
     setInterval(() => this.broadcast(), HEARTBEAT_INTERVAL);
@@ -71,7 +87,13 @@ class Discovery {
       port: this.port
     });
 
-    this.socket.send(payload, 0, payload.length, DISCOVERY_PORT, BROADCAST_ADDR);
+    // 1. Send to Global Broadcast (for other devices on LAN)
+    this.socket.send(payload, 0, payload.length, DISCOVERY_PORT, BROADCAST_ADDR, (err) => {
+      if (err) console.error(chalk.red(`[Discovery] LAN Broadcast Error: ${err.message}`));
+    });
+
+    // 2. Send to Localhost (for other instances on SAME machine)
+    this.socket.send(payload, 0, payload.length, DISCOVERY_PORT, '127.0.0.1');
   }
 
   cleanup() {

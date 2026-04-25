@@ -1,0 +1,8 @@
+{
+    "smoothing": 0.12,
+    "sensitivity": 0.34,
+    "camera_index": 1,
+    "apply_denoise": true,
+    "apply_sharpen": true,
+    "screenshot_hotkey": "alt+\\"
+}

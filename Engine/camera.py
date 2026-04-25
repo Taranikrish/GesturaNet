@@ -26,6 +26,7 @@ from websocket_server import broadcast
 from gesture_modes.mode_selector import update_mode_from_left_hand
 from gesture_modes.set1_cursor import process_set1
 from gesture_modes.set2_system import process_set2
+from gesture_modes.set3_transfer import process_set3
 
 # ── Volume & Brightness Integration ─────────────────────────────────────────
 AUDIO_VOLUME = None
@@ -136,23 +137,57 @@ def run_capture(loop: asyncio.AbstractEventLoop) -> None:
     Main OpenCV loop.  Runs in the main thread; uses *loop* to schedule
     WebSocket broadcasts from this synchronous context.
     """
-    cap = cv2.VideoCapture(CAMERA_INDEX, cv2.CAP_DSHOW)
+    current_camera_index = st.state.camera_index
+    cap = cv2.VideoCapture(current_camera_index, cv2.CAP_MSMF)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH,  FRAME_WIDTH)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT)
     cap.set(cv2.CAP_PROP_FPS,          CAMERA_FPS)
-    print("[Engine] Camera started")
+    print(f"[Engine] Camera started at index {current_camera_index}")
 
-    while cap.isOpened():
+    try:
+        from pygrabber.dshow_graph import FilterGraph
+        st.state.available_cameras = FilterGraph().get_input_devices()
+        print(f"[Engine] Available cameras: {st.state.available_cameras}")
+    except ImportError:
+        print("[Engine] pygrabber not installed, cannot fetch camera names.")
+        st.state.available_cameras = []
+
+    while True:
+        if st.state.camera_index != current_camera_index:
+            cap.release()
+            current_camera_index = st.state.camera_index
+            cap = cv2.VideoCapture(current_camera_index, cv2.CAP_MSMF)
+            cap.set(cv2.CAP_PROP_FRAME_WIDTH,  FRAME_WIDTH)
+            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT)
+            cap.set(cv2.CAP_PROP_FPS,          CAMERA_FPS)
+            print(f"[Engine] Camera switched to index {current_camera_index}")
+
+        if not cap.isOpened():
+            time.sleep(1)
+            continue
+
         target_fps  = st.state.fps
         frame_delay = 1.0 / target_fps
         start       = time.time()
 
         ret, frame = cap.read()
         if not ret:
-            break
+            print("[Engine] Failed to read frame")
+            time.sleep(1)
+            continue
 
         frame = cv2.flip(frame, 1)
         frame = cv2.resize(frame, (FRAME_WIDTH, FRAME_HEIGHT))
+
+        # ── Shader Denoise (Bilateral Filter) ─────────────────────────────
+        # Smooths flat regions while preserving edges for cleaner MP detection
+        if getattr(st.state, "apply_denoise", False):
+            frame = cv2.bilateralFilter(frame, d=7, sigmaColor=75, sigmaSpace=75)
+
+        # ── Shader Sharpen ────────────────────────────────────────────────
+        if getattr(st.state, "apply_sharpen", False):
+            kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
+            frame = cv2.filter2D(frame, -1, kernel)
 
         # ── MediaPipe inference ───────────────────────────────────────────
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -177,11 +212,11 @@ def run_capture(loop: asyncio.AbstractEventLoop) -> None:
                 # ── Right Hand: Action Executor ──────────────────────────────
                 if right_hand:
                     if st.state.current_mode == 1:
-                        # Set 1 (Cursor mode) uses normalized landmarks internally
                         gesture_info["gesture"] = process_set1(right_hand)
                     elif st.state.current_mode == 2:
-                        # Set 2 (System mode) — Pinch & Slide
                         gesture_info["gesture"] = process_set2(right_hand, frame, AUDIO_VOLUME)
+                    elif st.state.current_mode == 3:
+                        gesture_info["gesture"] = process_set3(right_hand, frame)
                 else:
                     gesture_info["gesture"] = "none" # Right hand missing
                 st.state.gesture = gesture_info.get("gesture", "none")
@@ -200,6 +235,10 @@ def run_capture(loop: asyncio.AbstractEventLoop) -> None:
             "cursor_x":        st.state.cursor_x,
             "cursor_y":        st.state.cursor_y,
             "scroll_delta":    st.state.scroll_delta,
+            "camera_index":    st.state.camera_index,
+            "available_cameras": st.state.available_cameras,
+            "apply_denoise":   st.state.apply_denoise,
+            "apply_sharpen":   st.state.apply_sharpen,
             "timestamp":       time.time(),
         }
 

@@ -1,7 +1,19 @@
 # ── Config ────────────────────────────────────────────────────────────────────
 
-WEBSOCKET_HOST = "localhost"
-WEBSOCKET_PORT = 8765
+import os
+
+env_path = os.path.join(os.path.dirname(__file__), '..', '.env')
+if os.path.exists(env_path):
+    with open(env_path, 'r') as f:
+        for line in f:
+            if '=' in line and not line.strip().startswith('#'):
+                k, v = line.strip().split('=', 1)
+                os.environ[k] = v
+
+WEBSOCKET_HOST = os.environ.get("ENGINE_HOST", "localhost")
+WEBSOCKET_PORT = int(os.environ.get("ENGINE_PORT", 8765))
+BACKEND_HOST = os.environ.get("BACKEND_HOST", "localhost")
+BACKEND_PORT = os.environ.get("BACKEND_PORT", "5000")
 
 INACTIVE_TIMEOUT = 60          # seconds before going inactive
 ACTIVE_FPS = 30                # frames per second when active
@@ -27,6 +39,10 @@ FRAME_HEIGHT = 480
 CAMERA_FPS = 30
 
 ACTIVE_ZONE_MARGIN = 0.8      # normalized margin to remap active zone to full screen
+
+# File Transfer Settings
+FIST_HOLD_SECONDS = 2.0
+SCREENSHOT_HOTKEY = ['printscreen'] # List of keys to press (e.g. ['win', 'shift', 's'])
 
 MODEL_PATH = "hand_landmarker.task"
 MODEL_URL = (

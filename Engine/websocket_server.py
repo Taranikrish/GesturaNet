@@ -44,10 +44,31 @@ async def ws_handler(websocket, path="/") -> None:
                     print("[Engine] Camera feed → OFF")
                 elif cmd.get("action") == "set_smoothing":
                     st.state.smoothing = float(cmd.get("value", 0.12))
+                    st.save_user_config()
                     print(f"[Engine] Smoothing → {st.state.smoothing}")
                 elif cmd.get("action") == "set_sensitivity":
                     st.state.sensitivity = float(cmd.get("value", 0.2))
+                    st.save_user_config()
                     print(f"[Engine] Sensitivity (Margin) → {st.state.sensitivity}")
+                elif cmd.get("action") == "set_camera":
+                    st.state.camera_index = int(cmd.get("value", 0))
+                    st.save_user_config()
+                    print(f"[Engine] Camera Index → {st.state.camera_index}")
+                elif cmd.get("action") == "set_denoise":
+                    st.state.apply_denoise = bool(cmd.get("value", False))
+                    st.save_user_config()
+                    print(f"[Engine] Shader Denoise → {st.state.apply_denoise}")
+                elif cmd.get("action") == "set_sharpen":
+                    st.state.apply_sharpen = bool(cmd.get("value", False))
+                    st.save_user_config()
+                    print(f"[Engine] Shader Sharpen → {st.state.apply_sharpen}")
+                elif cmd.get("action") == "set_screenshot_hotkey":
+                    st.state.screenshot_hotkey = str(cmd.get("value", "printscreen"))
+                    st.save_user_config()
+                    print(f"[Engine] Screenshot Hotkey → {st.state.screenshot_hotkey}")
+                elif cmd.get("action") == "force_mode":
+                    st.state.current_mode = int(cmd.get("mode", 1))
+                    print(f"[Engine] Mode FORCED from network → {st.state.current_mode}")
             except json.JSONDecodeError:
                 pass
     finally:
@@ -59,4 +80,5 @@ async def ws_handler(websocket, path="/") -> None:
 async def ws_server() -> None:
     async with websockets.serve(ws_handler, WEBSOCKET_HOST, WEBSOCKET_PORT):
         print(f"[WS] Server listening on ws://{WEBSOCKET_HOST}:{WEBSOCKET_PORT}")
+        st.set_config_suffix(WEBSOCKET_PORT) # Bind settings to this unique port
         await asyncio.Future()  # run forever

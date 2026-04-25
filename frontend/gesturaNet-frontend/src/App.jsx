@@ -3,8 +3,10 @@ import useGestureSocket from './hooks/useGestureSocket';
 import SurgicalDashboard from './pages/SurgicalDashboard';
 
 export default function App() {
-  const WS_URL = 'ws://localhost:5000/ws'; // Connect to dynamic host
-  const { state, log, sendCommand, fileRequest, setFileRequest } = useGestureSocket(WS_URL);
+  const BACKEND_HOST = import.meta.env.BACKEND_HOST || 'localhost';
+  const BACKEND_PORT = import.meta.env.BACKEND_PORT || '5000';
+  const WS_URL = `ws://${BACKEND_HOST}:${BACKEND_PORT}/ws`; // Connect to dynamic host
+  const { state, log, sendCommand, fileRequest, setFileRequest, toast, setToast, grabProgress } = useGestureSocket(WS_URL);
   const [acceptProgress, setAcceptProgress] = useState(0);
 
   const handleFileResponse = useCallback((accepted) => {
@@ -18,6 +20,13 @@ export default function App() {
       setAcceptProgress(0);
     }
   }, [fileRequest, sendCommand, setFileRequest]);
+
+  useEffect(() => {
+    if (fileRequest) {
+      console.log("[App] File request received. Forcing Engine into Mode 3 (Transfer Mode)");
+      sendCommand({ action: "force_mode", mode: 3 });
+    }
+  }, [fileRequest, sendCommand]);
 
   useEffect(() => {
     if (fileRequest && state.gesture) {
@@ -50,6 +59,13 @@ export default function App() {
 
     return () => clearInterval(interval);
   }, [state.gesture, fileRequest, handleFileResponse]);
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast, setToast]);
+
   return (
     <div className="min-h-screen bg-surface-container-lowest relative">
       <SurgicalDashboard
@@ -57,6 +73,46 @@ export default function App() {
         log={log}
         sendCommand={sendCommand}
       />
+
+      {/* Toast Notification */}
+      {toast && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="bg-primary text-on-primary px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 border border-white/20">
+            <span className="material-symbols-outlined text-sm">info</span>
+            <span className="text-xs font-bold tracking-widest uppercase">{toast.message}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Grab Progress Overlay */}
+      {grabProgress > 0 && grabProgress < 100 && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+          <div className="flex flex-col items-center gap-6">
+            <div className="relative w-48 h-48">
+              <svg className="w-full h-full -rotate-90">
+                <circle 
+                  cx="96" cy="96" r="80" 
+                  className="stroke-surface-container-highest fill-none stroke-[8]" 
+                />
+                <circle 
+                  cx="96" cy="96" r="80" 
+                  className="stroke-primary fill-none stroke-[8] transition-all duration-200"
+                  strokeDasharray={2 * Math.PI * 80}
+                  strokeDashoffset={2 * Math.PI * 80 * (1 - grabProgress / 100)}
+                  strokeLinecap="round"
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-3xl font-mono font-bold text-primary">{grabProgress}%</span>
+              </div>
+            </div>
+            <div className="text-center">
+              <h2 className="text-xl font-headline font-bold text-on-surface tracking-[0.2em] uppercase">Grabbing File...</h2>
+              <p className="text-[10px] text-on-surface-variant font-mono mt-2 opacity-60">HOLD FIST TO INITIALIZE TRANSFER</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* File Request Modal */}
       {fileRequest && (

@@ -16,7 +16,7 @@ const Busboy = require('busboy');
 const ip = require('./network_utils');
 const chalk = require('./colors');
 
-try { process.loadEnvFile(); } catch (e) { /* .env optional */ }
+try { process.loadEnvFile(path.resolve(__dirname, '../.env')); } catch (e) { /* .env optional */ }
 
 const Discovery = require('./discovery');
 const Handshake = require('./handshake');
@@ -26,7 +26,7 @@ const Resume = require('./resume');
 
 const app = express();
 const server = http.createServer(app);
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.BACKEND_PORT || process.env.PORT || 5000;
 const DEVICE_NAME = process.env.DEVICE_NAME || os.hostname();
 
 app.use(cors());
@@ -37,13 +37,35 @@ let engineSocket = null;
 let lastEngineState = { gesture: 'none', active: false, fps: 5, cursor_x: 0, cursor_y: 0, scroll_delta: 0, timestamp: 0 };
 
 function connectToEngine() {
-  const ENGINE_WS = process.env.ENGINE_WS || 'ws://localhost:8765';
+  const engineHost = process.env.ENGINE_HOST || 'localhost';
+  const enginePort = process.env.ENGINE_PORT || 8765;
+  const ENGINE_WS = `ws://${engineHost}:${enginePort}`;
+  
   console.log(chalk.yellow(`[Bridge] Connecting to Python engine at ${ENGINE_WS}...`));
   engineSocket = new WebSocket(ENGINE_WS);
-  engineSocket.on('open', () => { console.log(chalk.green('[Bridge] Connected ✓')); broadcastToClients({ type: 'engine_connected' }); });
-  engineSocket.on('message', (data) => { try { const s = JSON.parse(data.toString()); lastEngineState = { ...s, gesture: 'none' }; broadcastToClients({ type: 'gesture_state', ...s }); } catch (e) {} });
-  engineSocket.on('close', () => { console.log(chalk.red('[Bridge] Disconnected. Retrying in 3s...')); broadcastToClients({ type: 'engine_disconnected' }); setTimeout(connectToEngine, 3000); });
-  engineSocket.on('error', (err) => { console.error('[Bridge] Error:', err.message); });
+  
+  engineSocket.on('open', () => { 
+    console.log(chalk.green('[Bridge] Connected ✓')); 
+    broadcastToClients({ type: 'engine_connected' }); 
+  });
+  
+  engineSocket.on('message', (data) => { 
+    try { 
+      const s = JSON.parse(data.toString()); 
+      lastEngineState = { ...s, gesture: 'none' }; 
+      broadcastToClients({ type: 'gesture_state', ...s }); 
+    } catch (e) {} 
+  });
+  
+  engineSocket.on('close', () => { 
+    console.log(chalk.red('[Bridge] Disconnected. Retrying in 3s...'));
+    broadcastToClients({ type: 'engine_disconnected' });
+    setTimeout(connectToEngine, 3000); 
+  });
+  
+  engineSocket.on('error', (err) => { 
+    // Silence noise, the 'close' event handles retry logging
+  });
 }
 
 function sendToEngine(cmd) {
@@ -66,7 +88,7 @@ wss.on('connection', (ws) => {
       const cmd = JSON.parse(data.toString()); 
       if (cmd.action === 'handshake_response') {
         Handshake.resolveRequest(cmd.requestId, cmd.accepted);
-      } else if (['enable','disable','camera_on','camera_off','set_smoothing','set_sensitivity'].includes(cmd.action)) {
+      } else if (['enable','disable','camera_on','camera_off','set_smoothing','set_sensitivity','set_camera', 'set_denoise', 'set_sharpen', 'force_mode', 'set_screenshot_hotkey'].includes(cmd.action)) {
         sendToEngine(cmd); 
       }
     } catch (e) {} 
@@ -117,10 +139,18 @@ app.get('/progress/:transferId', (req, res) => {
 // ── NATIVE DISPATCH FROM PYTHON ────────────────────────────────────────────────
 app.post('/native-dispatch', (req, res) => {
   const { filePath } = req.body;
-  if (!filePath) return res.status(400).json({ error: 'Missing filePath' });
+  console.log(chalk.gray(`[NativeDispatch] Incoming request for: ${filePath || 'NULL'}`));
+
+  if (!filePath) {
+    console.error(chalk.red('[NativeDispatch] Error: Missing filePath in request body'));
+    return res.status(400).json({ error: 'Missing filePath' });
+  }
 
   const fs = require('fs');
-  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'File not found on disk' });
+  if (!fs.existsSync(filePath)) {
+    console.error(chalk.red(`[NativeDispatch] Error: File not found at ${filePath}`));
+    return res.status(404).json({ error: 'File not found on disk' });
+  }
 
   const stats = fs.statSync(filePath);
   if (!stats.isFile()) return res.status(400).json({ error: 'Not a file' });
@@ -137,7 +167,7 @@ app.post('/native-dispatch', (req, res) => {
   console.log(chalk.green(`[NativeDispatch] Broadcasting ${fileName} to ${peers.length} peers...`));
   
   // Inform UI just in case
-  broadcastToClients({ type: 'info_toast', message: `Native Dispatch: Sending ${fileName} to peers...` });
+  broadcastToClients({ type: 'info_toast', message: `FILE TRANSFER STARTED: ${fileName}` });
 
   for (const peer of peers) {
     Handshake.sendHandshake(
@@ -165,6 +195,21 @@ app.post('/native-dispatch', (req, res) => {
   }
 
   res.json({ status: 'dispatching', fileName, peers: peers.length });
+});
+
+app.post('/grab-progress', (req, res) => {
+  const { percent } = req.body;
+  broadcastToClients({ type: 'grab_progress', percent });
+  res.json({ success: true });
+});
+
+app.post('/native-drop', (req, res) => {
+  const count = Handshake.acceptAnyPending();
+  if (count > 0) {
+    console.log(chalk.green(`[NativeDrop] Drop Gesture triggered! Auto-accepted ${count} pending transfers.`));
+    broadcastToClients({ type: 'info_toast', message: `FILE RECEIVED` });
+  }
+  res.json({ accepted: count });
 });
 
 // ── RELAY PUSH ────────────────────────────────────────────────────────────────
@@ -257,6 +302,8 @@ startServer(PORT);
 
 setInterval(() => {
   const peers = discovery.getPeers();
-  if (peers.length > 0)
-    console.log(chalk.gray(`[Network] Peers: ${peers.map(p => `${p.name}(${p.ip})`).join(', ')}`));
-}, 10000);
+  broadcastToClients({ type: 'discovery_update', peers });
+  
+  // Continuous scanning feedback for the user
+  console.log(chalk.gray(`[Network] Scanning... (${peers.length} peers online)`));
+}, 3000);

@@ -24,55 +24,7 @@ PINCH_OFF_THRESHOLD = 70.0   # Distance above which = released (stop adjusting)
 # Hysteresis gap prevents flickering on/off at the boundary
 
 # Track which control is currently active
-active_control = None  # None | "volume" | "brightness" | "closed" | "open"
-last_logged_control = None
-
-# ── Fist hold timer for ambient dispatch ──────────────────────────────────────
-FIST_HOLD_SECONDS = 2.0
-fist_start_time = None      # timestamp when fist was first detected
-fist_dispatched = False     # True after dispatch fires, prevents re-firing
-
-
-def _get_clipboard_files():
-    """Read file paths from the Windows clipboard using PowerShell (thread-safe)."""
-    import subprocess
-    try:
-        result = subprocess.run(
-            ['powershell', '-Command', '(Get-Clipboard -Format FileDropList).FullName'],
-            capture_output=True, text=True, timeout=3
-        )
-        files = [f.strip() for f in result.stdout.strip().split('\n') if f.strip()]
-        return files
-    except Exception as e:
-        print(f"[Set 2] Clipboard read error: {e}")
-        return []
-
-
-def _dispatch_native_file():
-    """Background thread: Ctrl+C → read clipboard → POST to /native-dispatch."""
-    try:
-        pyautogui.hotkey("ctrl", "c")
-        time.sleep(0.3)  # let Windows populate clipboard
-
-        files = _get_clipboard_files()
-        if not files:
-            print("[Set 2] No file found in clipboard after Ctrl+C.")
-            return
-
-        file_path = files[0]
-        print(f"[Set 2] Dispatching: {file_path}")
-
-        req = urllib.request.Request(
-            "http://localhost:5000/native-dispatch",
-            data=json.dumps({"filePath": file_path}).encode("utf-8"),
-            headers={"Content-Type": "application/json"}
-        )
-        resp = urllib.request.urlopen(req, timeout=5.0)
-        result = json.loads(resp.read().decode())
-        print(f"[Set 2] Dispatch result: {result}")
-    except Exception as e:
-        print(f"[Set 2] Dispatch error: {e}")
-
+active_control = None  # None | "volume" | "brightness"
 
 def update_brightness_from_y(y_norm: float) -> None:
     """Set brightness based on Y position (0.0=top=100%, 1.0=bottom=0%)."""
@@ -163,51 +115,9 @@ def process_set2(right_hand, frame, audio_volume) -> str:
         return "brightness"
 
     else:
-        # Neither pinched — check for open/closed palm gestures
-        # Detection uses finger curl: tip below PIP = curled, tip above PIP = extended
-        # MediaPipe y increases downward, so tip.y > pip.y means finger is curled
-        index_curled  = right_hand[8].y  > right_hand[6].y
-        middle_curled = right_hand[12].y > right_hand[10].y
-        ring_curled   = right_hand[16].y > right_hand[14].y
-        pinky_curled  = right_hand[20].y > right_hand[18].y
-
-        all_curled   = index_curled and middle_curled and ring_curled and pinky_curled
-        all_extended = (not index_curled) and (not middle_curled) and (not ring_curled) and (not pinky_curled)
-
-        if all_curled:
-            if active_control != "closed":
-                # Fist just started — begin the hold timer
-                fist_start_time = time.time()
-                fist_dispatched = False
-                print("[Set 2] CLOSED PALM (fist) detected — hold 2s to dispatch")
-
-            # Check if held long enough
-            if fist_start_time and not fist_dispatched:
-                elapsed = time.time() - fist_start_time
-                if elapsed >= FIST_HOLD_SECONDS:
-                    fist_dispatched = True
-                    print(f"[Set 2] Fist held {FIST_HOLD_SECONDS}s — DISPATCHING!")
-                    threading.Thread(target=_dispatch_native_file, daemon=True).start()
-
-            active_control = "closed"
+        # Neither pinched — reset
+        if active_control is not None and active_control in ("volume", "brightness"):
+            print(f"[Set 2] Controls IDLE (released)")
             last_logged_control = None
-            return "closed"
-
-        elif all_extended:
-            if active_control != "open":
-                print("[Set 2] OPEN PALM detected")
-            active_control = "open"
-            fist_start_time = None
-            fist_dispatched = False
-            last_logged_control = None
-            return "open"
-
-        else:
-            # Ambiguous hand pose — reset fist timer
-            fist_start_time = None
-            fist_dispatched = False
-            if active_control is not None and active_control in ("volume", "brightness"):
-                print(f"[Set 2] Controls IDLE (released)")
-                last_logged_control = None
-            active_control = None
-            return "none"
+        active_control = None
+        return "none"

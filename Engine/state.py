@@ -1,10 +1,10 @@
 import time
+import json
+import os
 from dataclasses import dataclass, field
 from typing import Optional
 
-from config import INACTIVE_FPS
-
-
+from config import INACTIVE_FPS, CAMERA_INDEX
 # ── Gesture State ─────────────────────────────────────────────────────────────
 @dataclass
 class GestureState:
@@ -24,10 +24,56 @@ class GestureState:
     smoothing: float = 0.12        # Cursor smoothing factor
     sensitivity: float = 0.2       # Active zone margin (inverted sensitivity)
     current_mode: int = 1          # 1 = Cursor Set, 2 = System Set
+    camera_index: int = CAMERA_INDEX # Current camera index
+    available_cameras: list = field(default_factory=list)
+    apply_denoise: bool = False    # Shader denoise toggle
+    apply_sharpen: bool = False    # Shader sharpen toggle
+    screenshot_hotkey: str = "printscreen" # Hotkey string (e.g. "alt+\\")
 
 
 # Singleton state shared across all modules
 state = GestureState()
+
+CONFIG_FILE = os.path.join(os.path.dirname(__file__), "..", "user_settings.json")
+
+def set_config_suffix(suffix):
+    """Updates the config file path (e.g. user_settings_8765.json) and reloads it."""
+    global CONFIG_FILE
+    CONFIG_FILE = os.path.join(os.path.dirname(__file__), "..", f"user_settings_{suffix}.json")
+    print(f"[State] Config path updated to: {CONFIG_FILE}")
+    load_user_config()
+
+def load_user_config():
+    if os.path.exists(CONFIG_FILE):
+        try:
+            with open(CONFIG_FILE, 'r') as f:
+                data = json.load(f)
+                if 'smoothing' in data: state.smoothing = data['smoothing']
+                if 'sensitivity' in data: state.sensitivity = data['sensitivity']
+                if 'camera_index' in data: state.camera_index = data['camera_index']
+                if 'apply_denoise' in data: state.apply_denoise = data['apply_denoise']
+                if 'apply_sharpen' in data: state.apply_sharpen = data['apply_sharpen']
+                if 'screenshot_hotkey' in data: state.screenshot_hotkey = data['screenshot_hotkey']
+                print(f"[State] Loaded user settings: {data}")
+        except Exception as e:
+            print(f"[State] Error loading config: {e}")
+
+def save_user_config():
+    data = {
+        'smoothing': state.smoothing,
+        'sensitivity': state.sensitivity,
+        'camera_index': state.camera_index,
+        'apply_denoise': state.apply_denoise,
+        'apply_sharpen': state.apply_sharpen,
+        'screenshot_hotkey': state.screenshot_hotkey
+    }
+    try:
+        with open(CONFIG_FILE, 'w') as f:
+            json.dump(data, f, indent=4)
+    except Exception as e:
+        print(f"[State] Error saving config: {e}")
+
+load_user_config()
 
 # WebSocket clients
 connected_clients: set = set()

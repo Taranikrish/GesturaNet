@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 
-const P2P_API = 'http://localhost:5000';
+const BACKEND_HOST = import.meta.env.BACKEND_HOST || 'localhost';
+const BACKEND_PORT = import.meta.env.BACKEND_PORT || '5000';
+const P2P_API = `http://${BACKEND_HOST}:${BACKEND_PORT}`;
 
 const useFilePeer = () => {
   const [peers, setPeers] = useState([]);

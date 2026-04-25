@@ -7,7 +7,8 @@ const express = require("express");
 const http = require("http");
 const { WebSocketServer, WebSocket } = require("ws");
 const cors = require("cors");
-require("dotenv").config();
+const path = require("path");
+require("dotenv").config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
 const server = http.createServer(app);
@@ -23,7 +24,9 @@ let lastEngineState = {
 };
 
 function connectToEngine() {
-  const ENGINE_WS = process.env.ENGINE_WS || "ws://localhost:8765";
+  const engineHost = process.env.ENGINE_HOST || 'localhost';
+  const enginePort = process.env.ENGINE_PORT || 8765;
+  const ENGINE_WS = process.env.ENGINE_WS || `ws://${engineHost}:${enginePort}`;
   console.log(`[Bridge] Connecting to Python engine at ${ENGINE_WS}...`);
 
   engineSocket = new WebSocket(ENGINE_WS);
@@ -91,7 +94,7 @@ wss.on("connection", (ws) => {
       } else if (cmd.action === "camera_on" || cmd.action === "camera_off") {
         sendToEngine({ action: cmd.action });
         broadcastToClients({ type: "control", show_camera: cmd.action === "camera_on" });
-      } else if (["set_smoothing", "set_sensitivity"].includes(cmd.action)) {
+      } else if (["set_smoothing", "set_sensitivity", "set_camera", "set_denoise", "set_sharpen", "force_mode"].includes(cmd.action)) {
         sendToEngine(cmd);
       }
     } catch (e) {
@@ -131,7 +134,7 @@ app.post("/api/control", (req, res) => {
 });
 
 // ── Start Server ─────────────────────────────────────────────────────────────
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.BACKEND_PORT || process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`[Server] Running on http://localhost:${PORT}`);
   connectToEngine();

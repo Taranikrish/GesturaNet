@@ -26,3 +26,7 @@ __pycache__
 env
 TECHNICAL_REFERENCE.md
 myagents.md
+.gn_running.lock
+$null
+user_settings.json
+.gn_running.lock

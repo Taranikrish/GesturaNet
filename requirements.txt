@@ -7,3 +7,4 @@ pycaw==20251023
 comtypes==1.4.16
 screen-brightness-control==0.27.1
 WMI==1.5.1
+pygrabber==0.2
